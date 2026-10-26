@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CSG Signature Builder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: two-panel workbench — form on the left, the signature sitting on a white "email" sheet on the right; stacks on phones. */
+:root {
+  --bg: #f3f4f8;
+  --surface: #ffffff;
+  --fg: #1c2133;
+  --muted: #5e6478;
+  --line: #d9dce6;
+  --accent: #435da6;      /* CSG blue */
+  --accent-ink: #ffffff;
+  --lime: #bfcb4b;        /* CSG lime */
+  --plum: #8c5371;        /* website link color */
+  --note-bg: #fbf8e4;
+  --note-fg: #5a5420;
+  --paper: #ffffff;       /* the email itself stays white in both themes */
+  --font-ui: "Libre Franklin", "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #141722; --surface: #1d2130; --fg: #e8eaf2; --muted: #a2a8bb; --line: #333a4f;
+    --accent: #8299db; --accent-ink: #0f1320; --note-bg: #2c2a17; --note-fg: #e0d995; --plum: #c58aa9;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #141722; --surface: #1d2130; --fg: #e8eaf2; --muted: #a2a8bb; --line: #333a4f;
+  --accent: #8299db; --accent-ink: #0f1320; --note-bg: #2c2a17; --note-fg: #e0d995; --plum: #c58aa9;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--fg); font-family: var(--font-ui); font-size: 15px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 32px 48px;
+}
+.wrap { max-width: 1040px; margin: 0 auto; display: grid; gap: 28px; }
+header { display: grid; gap: 6px; }
+header .tick { width: 44px; height: 6px; background: var(--lime); }
+h1 { font-size: 1.75rem; line-height: 1.2; margin: 6px 0 0; font-weight: 700; text-wrap: balance; }
+header p { margin: 0; color: var(--muted); max-width: 60ch; }
+.grid { display: grid; grid-template-columns: minmax(0, 340px) minmax(0, 1fr); gap: 24px; align-items: start; }
+@media (max-width: 760px) { .grid { grid-template-columns: minmax(0, 1fr); } }
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 22px; display: grid; gap: 16px; min-width: 0; }
+.label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; color: var(--muted); }
+.field { display: grid; gap: 5px; }
+.field label { font-size: 0.85rem; font-weight: 600; }
+.field small { color: var(--muted); font-size: 0.78rem; }
+input[type="text"], input[type="tel"] {
+  font: inherit; color: var(--fg); background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 9px 11px; width: 100%;
+}
+input:focus-visible, button:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.fixed { border-top: 1px solid var(--line); padding-top: 14px; display: grid; gap: 4px; font-size: 0.85rem; color: var(--muted); }
+.fixed strong { color: var(--fg); font-weight: 600; }
+.right { display: grid; gap: 16px; min-width: 0; }
+.sheet { background: var(--paper); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.sheet-head { display: flex; flex-wrap: wrap; gap: 4px 14px; padding: 10px 18px; border-bottom: 1px solid #e3e5ec; font-size: 0.8rem; color: #5e6478; background: #f7f8fb; }
+.sheet-body { padding: 22px 26px 30px; color: #222; overflow-x: auto; }
+.sheet-body .msg { font-family: Arial, sans-serif; font-size: 14px; margin: 0 0 18px; color: #222; }
+.actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+button { font: inherit; font-weight: 600; border-radius: 6px; padding: 10px 16px; cursor: pointer; border: 1px solid var(--accent); }
+.primary { background: var(--accent); color: var(--accent-ink); }
+.secondary { background: transparent; color: var(--accent); }
+.status { font-size: 0.85rem; color: var(--muted); min-height: 1.3em; }
+.note { background: var(--note-bg); color: var(--note-fg); border-radius: 8px; padding: 12px 14px; font-size: 0.85rem; }
+.steps { display: grid; gap: 10px; }
+details { border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+summary { cursor: pointer; padding: 12px 16px; font-weight: 600; }
+details ol { margin: 0; padding: 0 16px 14px 36px; display: grid; gap: 6px; color: var(--fg); }
+details li::marker { color: var(--muted); }
+kbd { font-family: var(--font-mono); font-size: 0.8em; border: 1px solid var(--line); border-radius: 4px; padding: 1px 5px; background: var(--bg); }
+textarea { width: 100%; min-height: 160px; font-family: var(--font-mono); font-size: 12px; color: var(--fg); background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 10px; }
+#copyStage { position: fixed; left: -9999px; top: 0; background: #fff; }
+@media (prefers-reduced-motion: no-preference) { button { transition: filter .15s; } button:hover { filter: brightness(1.08); } }
+img{max-width:100%}
+[hidden]{display:none!important}
+body{margin:0}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <div class="tick" aria-hidden="true"></div>
+    <h1>CSG email signature</h1>
+    <p>Fill in your details, copy the signature, and paste it into Outlook. The address, website, social icons and blog link are the same for everyone.</p>
+  </header>
+
+  <div class="grid">
+    <form class="panel" id="form" autocomplete="on">
+      <div class="label">Your details</div>
+      <div class="field">
+        <label for="name">Full name</label>
+        <input type="text" id="name" value="Jordan Ellis" autocomplete="name">
+      </div>
+      <div class="field">
+        <label for="title">Title</label>
+        <input type="text" id="title" value="Senior Designer" autocomplete="organization-title">
+      </div>
+      <div class="field">
+        <label for="phone">Phone</label>
+        <input type="tel" id="phone" value="703.555.0142" autocomplete="tel">
+        <small>Use dots, like 703.555.0142, to match the house style.</small>
+      </div>
+      <div class="fixed">
+        <span class="label">Same for everyone</span>
+        <span><strong>313 S. Patrick Street</strong>, Alexandria, VA 22314</span>
+        <span>csgcreative.com · Facebook · Instagram · LinkedIn · Blog</span>
+      </div>
+    </form>
+
+    <div class="right">
+      <div class="sheet" aria-label="Signature preview">
+        <div class="sheet-head"><span><b>To:</b> client@example.com</span><span><b>Subject:</b> Following up</span></div>
+        <div class="sheet-body">
+          <p class="msg">Thanks again for the meeting today. More soon.</p>
+          <div id="preview"></div>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button type="button" class="primary" id="copyBtn">Copy signature</button>
+        <button type="button" class="secondary" id="htmlBtn">Copy HTML</button>
+        <span class="status" id="status" role="status"></span>
+      </div>
+
+      <div class="note" id="hostNote">The images in this preview are stand-ins. Until the logo and icons are uploaded to the web server, a copied signature will show broken images.</div>
+
+      <div class="steps">
+        <div class="label">Paste it into Outlook</div>
+        <details open>
+          <summary>New Outlook (Windows) and Outlook on the web</summary>
+          <ol>
+            <li>Click the gear icon, then <b>Account → Signatures</b>.</li>
+            <li>Click <b>+ New signature</b> and name it "CSG".</li>
+            <li>Click in the editor box and press <kbd>Ctrl</kbd>+<kbd>V</kbd>.</li>
+            <li>Under <b>Select default signatures</b>, pick "CSG" for new messages and for replies/forwards, then <b>Save</b>.</li>
+          </ol>
+        </details>
+        <details>
+          <summary>Classic Outlook (Windows)</summary>
+          <ol>
+            <li>Go to <b>File → Options → Mail → Signatures…</b></li>
+            <li>Click <b>New</b>, name it "CSG", and paste into the editor with <kbd>Ctrl</kbd>+<kbd>V</kbd>.</li>
+            <li>On the right, set it as the default for new messages and replies/forwards, then click <b>OK</b>.</li>
+          </ol>
+        </details>
+        <details>
+          <summary>Outlook for Mac</summary>
+          <ol>
+            <li>Go to <b>Outlook → Settings → Signatures</b>.</li>
+            <li>Click <b>+</b>, name it "CSG", and paste into the editor with <kbd>⌘</kbd>+<kbd>V</kbd>.</li>
+            <li>Close the editor to save, then choose it as the default for new messages and replies.</li>
+            <li>Mac signatures don't sync, so repeat this on each Mac you use.</li>
+          </ol>
+        </details>
+        <details>
+          <summary>Outlook on iPhone or Android</summary>
+          <ol>
+            <li>The mobile app only takes plain-text signatures. Use your name, title and phone, or leave it off.</li>
+          </ol>
+        </details>
+      </div>
+
+      <details id="codeBox">
+        <summary>View HTML source</summary>
+        <div style="padding: 0 16px 16px;"><textarea id="code" readonly aria-label="Signature HTML"></textarea></div>
+      </details>
+    </div>
+  </div>
+</div>
+
+<div id="copyStage" aria-hidden="true"></div>
+
+<script>
+/* ---- Shared settings: edit these once the images are hosted ---- */
+const CONFIG = {
+  imagesHosted: true,
+  logo:      { src: "https://csg-creative.github.io/csg-email-signature/csg-signature-logo.png", w: 168, h: 80 },
+  facebook:  { src: "https://csg-creative.github.io/csg-email-signature/csg-signature-facebook.png",  href: "https://www.facebook.com/csgcreative" },
+  instagram: { src: "https://csg-creative.github.io/csg-email-signature/csg-signature-instagram.png", href: "https://www.instagram.com/CSGCreativeAgency/" },
+  linkedin:  { src: "https://csg-creative.github.io/csg-email-signature/csg-signature-linkedin.png",  href: "https://www.linkedin.com/company/1688028/" },
+  iconSize: 26,
+  site: "https://csgcreative.com/",
+  blog: "https://csgcreative.com/blog/",
+  address1: "313 S. Patrick Street",
+  address2: "Alexandria, VA 22314"
+};
+const STANDIN = { logo: CONFIG.logo.src, facebook: CONFIG.facebook.src, instagram: CONFIG.instagram.src, linkedin: CONFIG.linkedin.src };
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+function buildSignature(useStandins) {
+  const name = esc($("name").value.trim() || "Firstname Lastname");
+  const title = esc($("title").value.trim() || "Title");
+  const phone = esc($("phone").value.trim() || "703.XXX.XXXX");
+  const img = key => useStandins ? STANDIN[key] : CONFIG[key].src;
+  const F = "font-family:Arial,Helvetica,sans-serif;";
+  const L = "mso-line-height-rule:exactly;";
+  const s = CONFIG.iconSize;
+  const icon = (key, label) =>
+    `<td style="padding:0 10px 0 0;"><a href="${CONFIG[key].href}" target="_blank" style="text-decoration:none;"><img src="${img(key)}" width="${s}" height="${s}" alt="${label}" style="display:block;border:0;width:${s}px;height:${s}px;"></a></td>`;
+
+  return `<table cellpadding="0" cellspacing="0" border="0" role="presentation" style="border-collapse:collapse;${F}">
+<tr><td style="padding:0 0 22px 0;"><a href="${CONFIG.site}" target="_blank" style="text-decoration:none;"><img src="${img("logo")}" width="${CONFIG.logo.w}" height="${CONFIG.logo.h}" alt="CSG — strategy, design, results" style="display:block;border:0;width:${CONFIG.logo.w}px;height:${CONFIG.logo.h}px;"></a></td></tr>
+<tr><td style="${F}font-size:16px;line-height:21px;${L}font-weight:bold;color:#435da6;padding:0;">${name}</td></tr>
+<tr><td style="${F}font-size:14px;line-height:20px;${L}color:#000000;padding:0;">${title}<br>${phone}<br>${esc(CONFIG.address1)}<br>${esc(CONFIG.address2)}</td></tr>
+<tr><td style="${F}font-size:14px;line-height:20px;${L}font-weight:bold;padding:0 0 8px 0;"><a href="${CONFIG.site}" target="_blank" style="color:#8c5371;text-decoration:none;">csgcreative.com</a></td></tr>
+<tr><td style="padding:0 0 8px 0;"><table cellpadding="0" cellspacing="0" border="0" role="presentation" style="border-collapse:collapse;"><tr>${icon("facebook", "Facebook")}${icon("instagram", "Instagram")}${icon("linkedin", "LinkedIn")}</tr></table></td></tr>
+<tr><td style="${F}font-size:13px;line-height:18px;${L}padding:0;"><a href="${CONFIG.blog}" target="_blank" style="color:#87888a;text-decoration:underline;">Read the CSG Blog</a></td></tr>
+</table>`;
+}
+
+function render() {
+  $("preview").innerHTML = buildSignature(true);
+  $("code").value = buildSignature(false);
+}
+
+function setStatus(msg) { $("status").textContent = msg; }
+
+async function copyRich() {
+  const html = buildSignature(false);
+  const plain = [$("name").value, $("title").value, $("phone").value, CONFIG.address1, CONFIG.address2, "csgcreative.com"].join("\n");
+  try {
+    if (!window.ClipboardItem || !navigator.clipboard?.write) throw new Error("no rich clipboard");
+    await navigator.clipboard.write([new ClipboardItem({
+      "text/html": new Blob([html], { type: "text/html" }),
+      "text/plain": new Blob([plain], { type: "text/plain" })
+    })]);
+    setStatus("Copied. Paste it into Outlook's signature editor.");
+  } catch (e) {
+    const stage = $("copyStage");
+    stage.innerHTML = html;
+    const range = document.createRange();
+    range.selectNodeContents(stage);
+    const sel = window.getSelection();
+    sel.removeAllRanges(); sel.addRange(range);
+    let ok = false;
+    try { ok = document.execCommand("copy"); } catch (_) {}
+    sel.removeAllRanges();
+    setStatus(ok ? "Copied. Paste it into Outlook's signature editor."
+                 : "Your browser blocked copying. Select the preview with your mouse and press Ctrl+C (⌘C on Mac).");
+  }
+}
+
+async function copyHtml() {
+  const code = $("code");
+  try { await navigator.clipboard.writeText(code.value); setStatus("HTML copied."); }
+  catch (e) { $("codeBox").open = true; code.focus(); code.select(); setStatus("Press Ctrl+C (⌘C on Mac) to copy the selected HTML."); }
+}
+
+["name", "title", "phone"].forEach(id => $(id).addEventListener("input", render));
+$("form").addEventListener("submit", e => e.preventDefault());
+$("copyBtn").addEventListener("click", copyRich);
+$("htmlBtn").addEventListener("click", copyHtml);
+$("hostNote").hidden = CONFIG.imagesHosted;
+render();
+</script>
+</body>
+</html>
