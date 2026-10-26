@@ -100,11 +100,11 @@ body{margin:0}
       <div class="label">Your details</div>
       <div class="field">
         <label for="name">Full name</label>
-        <input type="text" id="name" value="Jordan Ellis" autocomplete="name">
+        <input type="text" id="name" value="" placeholder="Your Name" autocomplete="name">
       </div>
       <div class="field">
         <label for="title">Title</label>
-        <input type="text" id="title" value="Senior Designer" autocomplete="organization-title">
+        <input type="text" id="title" value="" placeholder="Your Title" autocomplete="organization-title">
       </div>
       <div class="field">
         <label for="phone">Phone</label>
@@ -195,14 +195,15 @@ const CONFIG = {
   address1: "313 S. Patrick Street",
   address2: "Alexandria, VA 22314"
 };
-const STANDIN = { logo: CONFIG.logo.src, facebook: CONFIG.facebook.src, instagram: CONFIG.instagram.src, linkedin: CONFIG.linkedin.src };
+/* Preview loads the images from this same folder; copied signatures always use the full CONFIG URLs */
+const STANDIN = { logo: "csg-signature-logo.png", facebook: "csg-signature-facebook.png", instagram: "csg-signature-instagram.png", linkedin: "csg-signature-linkedin.png" };
 
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
 function buildSignature(useStandins) {
-  const name = esc($("name").value.trim() || "Firstname Lastname");
-  const title = esc($("title").value.trim() || "Title");
+  const name = esc($("name").value.trim() || "Your Name");
+  const title = esc($("title").value.trim() || "Your Title");
   const phone = esc($("phone").value.trim() || "XXX.XXX.XXXX");
   const img = key => useStandins ? STANDIN[key] : CONFIG[key].src;
   const F = "font-family:Arial,Helvetica,sans-serif;";
