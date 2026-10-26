@@ -108,8 +108,8 @@ body{margin:0}
       </div>
       <div class="field">
         <label for="phone">Phone</label>
-        <input type="tel" id="phone" value="703.555.0142" autocomplete="tel">
-        <small>Use dots, like 703.555.0142, to match the house style.</small>
+        <input type="tel" id="phone" value="" placeholder="XXX.XXX.XXXX" autocomplete="tel">
+        <small>Use dots between the numbers (XXX.XXX.XXXX) to match the house style.</small>
       </div>
       <div class="fixed">
         <span class="label">Same for everyone</span>
@@ -203,7 +203,7 @@ const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;",
 function buildSignature(useStandins) {
   const name = esc($("name").value.trim() || "Firstname Lastname");
   const title = esc($("title").value.trim() || "Title");
-  const phone = esc($("phone").value.trim() || "703.XXX.XXXX");
+  const phone = esc($("phone").value.trim() || "XXX.XXX.XXXX");
   const img = key => useStandins ? STANDIN[key] : CONFIG[key].src;
   const F = "font-family:Arial,Helvetica,sans-serif;";
   const L = "mso-line-height-rule:exactly;";
